@@ -1,4 +1,4 @@
-package com.jihaoduan.springbootcassandra.model;
+package com.jihaoduan.springbootcassandra.api;
 
 import java.util.UUID;
 

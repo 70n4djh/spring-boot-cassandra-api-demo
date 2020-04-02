@@ -5,16 +5,29 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import com.jihaoduan.springbootcassandra.model.Product;
 import com.jihaoduan.springbootcassandra.repository.ProductRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException.InternalServerError;
 
 @Service
 public class ProductService implements ProductServiceInterface {
 
     private ProductRepository productRepository;
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    private Product applyPatch(JsonPatch patch, Product target) throws JsonPatchException, JsonProcessingException {
+        JsonNode patched = patch.apply(objectMapper.convertValue(target, JsonNode.class));
+        return objectMapper.treeToValue(patched, Product.class);
+    }
 
     @Autowired
     public ProductService(ProductRepository productRepository) {
@@ -48,14 +61,16 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
-    public void updateProduct(UUID id, Product product) throws NoSuchElementException {
-        Product existingProduct = productRepository.findById(id).orElseThrow(NoSuchElementException::new);
-        productRepository.save(existingProduct);
+    public Product updateProduct(UUID id, JsonPatch patch) throws ResourceNotFoundException, JsonPatchException, JsonProcessingException {
+        Product existingProduct = productRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
+
+            Product patchedProduct = applyPatch(patch, existingProduct);
+            return productRepository.save(patchedProduct);
     }
 
     @Override
-    public void deleteProduct(UUID id) throws NoSuchElementException {
-        Product existingProduct = productRepository.findById(id).orElseThrow(NoSuchElementException::new);
+    public void deleteProduct(UUID id) throws ResourceNotFoundException {
+        Product existingProduct = productRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
         productRepository.delete(existingProduct);
     }
 

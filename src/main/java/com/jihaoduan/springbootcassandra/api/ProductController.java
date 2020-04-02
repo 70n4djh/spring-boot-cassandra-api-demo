@@ -7,9 +7,10 @@ import java.util.UUID;
 
 import javax.validation.Valid;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import com.jihaoduan.springbootcassandra.model.Product;
-import com.jihaoduan.springbootcassandra.model.ProductOperationResonse;
-import com.jihaoduan.springbootcassandra.model.ProductUpdateRequest;
 import com.jihaoduan.springbootcassandra.repository.ProductRepository;
 import com.jihaoduan.springbootcassandra.service.ProductService;
 
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpServerErrorException.InternalServerError;
 
 import net.minidev.json.JSONObject;
 
@@ -48,24 +50,26 @@ public class ProductController {
     public ResponseEntity<Product> getProductById(@PathVariable("id") UUID id) {
         try {
             return ResponseEntity.ok(productService.getProductById(id));
-        } catch(NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             return new ResponseEntity<Product>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @PostMapping(value = "/product", consumes = {"application/json"})
+    @PostMapping(value = "/product", consumes = { "application/json" })
     public Product createProduct(@RequestBody @Valid Product product) {
         return productService.createProduct(product);
     }
 
-    @PatchMapping(path = "/product/{id}", consumes = {"application/json"})
-    public ResponseEntity<Product> updateProduct(@PathVariable("id") UUID id, @RequestBody @Valid Product product) {
+    @PatchMapping(path = "/product/{id}", consumes = { "application/json-patch+json" })
+    public ResponseEntity<Product> updateProduct(@PathVariable("id") UUID id, @RequestBody @Valid JsonPatch patch) {
 
         try {
-            productService.updateProduct(id, product);
+            Product product = productService.updateProduct(id, patch);
             return ResponseEntity.ok(product);
-        } catch(NoSuchElementException e) {
+        } catch(ResourceNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch(JsonPatchException | JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     @DeleteMapping(path = "/product/{id}", produces = {"application/json"})
@@ -73,8 +77,8 @@ public class ProductController {
         try {
             productService.deleteProduct(id);
             return ResponseEntity.ok(new ProductOperationResonse("Product Deleted", id));
-        } catch(NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch(ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

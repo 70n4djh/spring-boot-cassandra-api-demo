@@ -8,6 +8,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import com.jihaoduan.springbootcassandra.api.ProductController;
 import com.jihaoduan.springbootcassandra.model.Product;
 import com.jihaoduan.springbootcassandra.repository.ProductRepository;
@@ -34,6 +36,8 @@ public class ProductServiceTests {
 
 	@MockBean
 	private ProductRepository productRepository;
+
+	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
 	public void testGetAllProducts() throws Exception {
@@ -73,19 +77,29 @@ public class ProductServiceTests {
 	@Test
 	public void testUpdateProductName() {
 		Product product = new Product("Apples");
-		product.setName("Oranges");
 		when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-		productService.updateProduct(product.getId(), product);
-		verify(productRepository, times(1)).save(product);
+		try {
+			JsonPatch patch = objectMapper.readValue("{ 'op': 'move', 'from': '/a', 'path': '/c' }", JsonPatch.class);
+			productService.updateProduct(product.getId(), patch);
+			verify(productRepository, times(1)).save(product);
+		} catch(Exception e) {
+			System.out.println(e.getStackTrace());
+		}
+
 	}
 
 	@Test
 	public void testUpdateProductPrice() {
 		Product product = new Product("Apples");
-		product.setPrice(1200);
 		when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-		productService.updateProduct(product.getId(), product);
-		verify(productRepository, times(1)).save(product);
+		try {
+			JsonPatch patch = objectMapper.readValue("{ 'op': 'move', 'from': '/a', 'path': '/c' }", JsonPatch.class);
+			productService.updateProduct(product.getId(), patch);
+			verify(productRepository, times(1)).save(product);
+
+		} catch(Exception e) {
+			System.out.println(e.getStackTrace());
+		}
 	}
 
 }

@@ -32,6 +32,7 @@ public class Product {
     public Product(String name) {
         this.id = UUID.randomUUID();
         this.name = name;
+        this.createdAt = new Date();
     }
 
     public Product(String name, int price, String image, String description, String sellBy, String brand, String category, Date createdAt, Date lastUpdated) {
