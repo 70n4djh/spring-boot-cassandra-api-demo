@@ -23,6 +23,7 @@ public class ProductService implements ProductServiceInterface {
 
     @Override
     public Product createProduct(Product product) {
+        if(product.getId() == null) product.setId(UUID.randomUUID());
         return productRepository.save(product);
     }
 

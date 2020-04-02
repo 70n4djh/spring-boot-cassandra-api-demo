@@ -1,9 +1,11 @@
 package com.jihaoduan.springbootcassandra;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.jihaoduan.springbootcassandra.api.ProductController;
@@ -48,26 +50,42 @@ public class ProductServiceTests {
 
 	@Test
 	public void testDeleteProduct() throws Exception {
-
+		Product product = new Product("Apples");
+		when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+		productService.deleteProduct(product.getId());
+		verify(productRepository, times(1)).delete(product);
 	}
 
 	@Test
 	public void testGetProductById() {
-
+		Product product = new Product("Apples");
+		when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+		assertEquals(product, productService.getProductById(product.getId()));
 	}
 
 	@Test
     public void testGetProductByInvalidId() {
-
+		UUID randomId = UUID.randomUUID();
+		when(productRepository.findById(randomId)).thenThrow(new NoSuchElementException());
+		assertThrows(NoSuchElementException.class, () -> productService.getProductById(randomId));
 	}
 
 	@Test
 	public void testUpdateProductName() {
-
+		Product product = new Product("Apples");
+		product.setName("Oranges");
+		when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+		productService.updateProduct(product.getId(), product);
+		verify(productRepository, times(1)).save(product);
 	}
 
-	// void testUpdateProductPrice() {
-
-	// }
+	@Test
+	public void testUpdateProductPrice() {
+		Product product = new Product("Apples");
+		product.setPrice(1200);
+		when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+		productService.updateProduct(product.getId(), product);
+		verify(productRepository, times(1)).save(product);
+	}
 
 }

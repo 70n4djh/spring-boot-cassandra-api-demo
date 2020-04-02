@@ -41,13 +41,11 @@ public class ProductController {
 
     @GetMapping(value = "/products")
     public List<Product> getAllProducts() {
-        System.out.println("calling get all");
         return productService.getAllProducts();
     }
 
     @GetMapping(path = "/product/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable("id") UUID id) {
-
         try {
             return ResponseEntity.ok(productService.getProductById(id));
         } catch(NoSuchElementException e) {
@@ -57,7 +55,6 @@ public class ProductController {
 
     @PostMapping(value = "/product", consumes = {"application/json"})
     public Product createProduct(@RequestBody @Valid Product product) {
-        System.out.println(product.toString());
         return productService.createProduct(product);
     }
 
