@@ -1,5 +1,6 @@
 package com.jihaoduan.springbootcassandra.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -36,6 +37,8 @@ public class ProductService implements ProductServiceInterface {
     @Override
     public Product createProduct(Product product) {
         if(product.getId() == null) product.setId(UUID.randomUUID());
+        if(product.getCreatedAt() == null) product.setCreatedAt(new Date());
+        if(product.getLastUpdated() == null) product.setLastUpdated(new Date());
         return productRepository.save(product);
     }
 
@@ -63,6 +66,7 @@ public class ProductService implements ProductServiceInterface {
     public Product updateProduct(UUID id, JsonPatch patch) throws ResourceNotFoundException, JsonPatchException, JsonProcessingException {
         Product existingProduct = productRepository.findById(id).orElseThrow(ResourceNotFoundException::new);
         Product patchedProduct = applyPatch(patch, existingProduct);
+        patchedProduct.setLastUpdated(new Date());
         return productRepository.save(patchedProduct);
     }
 
